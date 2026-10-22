@@ -2,3 +2,9 @@ node_modules/
 dist/
 shots/
 /.manus-webdev/preview-identity.json
+# Assets restored from assets.lock.json
+/assets/models/mountain-shrine-gate.glb
+/assets/models/wukong-idle.glb
+/assets/models/wukong-walk.glb
+# Assets restored from assets.lock.json
+/assets/share/favicon.png

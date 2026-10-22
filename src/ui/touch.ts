@@ -1,9 +1,6 @@
 import type { Input } from '../engine/input'
 
-/**
- * On-screen touch controls: a floating stick on the left half, drag-to-look on the right half,
- * and JUMP / DASH buttons. Enabled automatically on the first touch.
- */
+/** Floating movement stick, drag-to-look and jump control for touch devices. */
 export class TouchControls {
   private stickId: number | null = null
   private lookId: number | null = null
@@ -17,71 +14,53 @@ export class TouchControls {
     this.stick = layer.querySelector('.touch-stick')!
     this.knob = this.stick.querySelector('i')!
     const radius = 56
-
     const enable = () => document.body.classList.add('has-touch')
     if (matchMedia('(pointer: coarse)').matches) enable()
     window.addEventListener('touchstart', enable, { once: true, passive: true })
-    // Any touch switches hints/prompts to touch, even taps on menu buttons.
-    window.addEventListener('pointerdown', e => {
-      if (e.pointerType === 'touch') this.input.method = 'touch'
-    }, { capture: true })
+    window.addEventListener('pointerdown', event => { if (event.pointerType === 'touch') this.input.method = 'touch' }, { capture: true })
 
     const canvas = document.querySelector<HTMLCanvasElement>('#game')!
-    canvas.addEventListener('pointerdown', e => {
-      if (e.pointerType !== 'touch' || !this.active()) return
-      if (e.clientX < window.innerWidth * 0.45 && this.stickId === null) {
-        this.stickId = e.pointerId
-        this.origin = { x: e.clientX, y: e.clientY }
-        this.stick.style.left = `${e.clientX}px`
-        this.stick.style.top = `${e.clientY}px`
+    canvas.addEventListener('pointerdown', event => {
+      if (event.pointerType !== 'touch' || !this.active()) return
+      if (event.clientX < window.innerWidth * 0.45 && this.stickId === null) {
+        this.stickId = event.pointerId
+        this.origin = { x: event.clientX, y: event.clientY }
+        this.stick.style.left = `${event.clientX}px`
+        this.stick.style.top = `${event.clientY}px`
         this.stick.classList.add('is-active')
       } else if (this.lookId === null) {
-        this.lookId = e.pointerId
-        this.last = { x: e.clientX, y: e.clientY }
+        this.lookId = event.pointerId
+        this.last = { x: event.clientX, y: event.clientY }
       }
     })
-    window.addEventListener('pointermove', e => {
-      if (e.pointerId === this.stickId) {
-        let dx = e.clientX - this.origin.x
-        let dy = e.clientY - this.origin.y
-        const len = Math.hypot(dx, dy)
-        if (len > radius) {
-          dx = (dx / len) * radius
-          dy = (dy / len) * radius
-        }
+    window.addEventListener('pointermove', event => {
+      if (event.pointerId === this.stickId) {
+        let dx = event.clientX - this.origin.x, dy = event.clientY - this.origin.y
+        const length = Math.hypot(dx, dy)
+        if (length > radius) { dx = dx / length * radius; dy = dy / length * radius }
         this.knob.style.transform = `translate(${dx}px, ${dy}px)`
         this.input.setTouchMove(dx / radius, -dy / radius)
-      } else if (e.pointerId === this.lookId) {
-        this.input.addTouchLook(e.clientX - this.last.x, e.clientY - this.last.y)
-        this.last = { x: e.clientX, y: e.clientY }
+      } else if (event.pointerId === this.lookId) {
+        this.input.addTouchLook(event.clientX - this.last.x, event.clientY - this.last.y)
+        this.last = { x: event.clientX, y: event.clientY }
       }
     })
-    const end = (e: PointerEvent) => {
-      if (e.pointerId === this.stickId) {
-        this.stickId = null
-        this.knob.style.transform = ''
-        this.stick.classList.remove('is-active')
-        this.input.setTouchMove(0, 0)
+    const end = (event: PointerEvent) => {
+      if (event.pointerId === this.stickId) {
+        this.stickId = null; this.knob.style.transform = ''; this.stick.classList.remove('is-active'); this.input.setTouchMove(0, 0)
       }
-      if (e.pointerId === this.lookId) this.lookId = null
+      if (event.pointerId === this.lookId) this.lookId = null
     }
     window.addEventListener('pointerup', end)
     window.addEventListener('pointercancel', end)
-
-    for (const btn of layer.querySelectorAll<HTMLElement>('[data-touch]')) {
-      const action = btn.dataset.touch as 'jump' | 'dash'
-      btn.addEventListener('pointerdown', e => {
-        e.preventDefault()
-        btn.setPointerCapture(e.pointerId)
-        btn.classList.add('is-down')
-        this.input.setTouchButton(action, true)
+    for (const button of layer.querySelectorAll<HTMLElement>('[data-touch]')) {
+      const action = button.dataset.touch as 'jump'
+      button.addEventListener('pointerdown', event => {
+        event.preventDefault(); button.setPointerCapture(event.pointerId); button.classList.add('is-down'); this.input.setTouchButton(action, true)
       })
-      const up = () => {
-        btn.classList.remove('is-down')
-        this.input.setTouchButton(action, false)
-      }
-      btn.addEventListener('pointerup', up)
-      btn.addEventListener('pointercancel', up)
+      const release = () => { button.classList.remove('is-down'); this.input.setTouchButton(action, false) }
+      button.addEventListener('pointerup', release)
+      button.addEventListener('pointercancel', release)
     }
   }
 }
