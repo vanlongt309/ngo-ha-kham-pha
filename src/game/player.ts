@@ -4,7 +4,7 @@ import { CONFIG } from './config'
 import { tuning } from './tuning'
 import type { MovingPlatform } from './world'
 
-export type PlayerIntent = { moveX: number; moveY: number; sprint: boolean; jumpPressed: boolean; jumpHeld: boolean }
+export type PlayerIntent = { moveX: number; moveY: number; sprint: boolean; jumpPressed: boolean; jumpHeld: boolean; touch?: boolean }
 export type PlayerEvent = { type: 'jump' } | { type: 'land'; impact: number }
 
 const P = CONFIG.player
@@ -93,7 +93,8 @@ export class Player {
     const control = this.grounded ? 1 : P.airControl
     const target = wish.clone().multiplyScalar(speed)
     const horizontal = new THREE.Vector3(this.velocity.x, 0, this.velocity.z)
-    horizontal.lerp(target, 1 - Math.exp(-(P.acceleration / 6) * control * dt))
+    const response = (P.acceleration / (intent.touch ? 3 : 6)) * control
+    horizontal.lerp(target, 1 - Math.exp(-response * dt))
     this.velocity.x = horizontal.x
     this.velocity.z = horizontal.z
 

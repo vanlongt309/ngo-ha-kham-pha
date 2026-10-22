@@ -60,6 +60,23 @@ describe('Three.js exploration tuning', () => {
     } finally { physics.dispose() }
   })
 
+  it('makes touch-stick acceleration responsive while retaining a smooth ramp', async () => {
+    await initPhysics()
+    const physics = new Physics(CONFIG.player.gravity)
+    const player = new Player(physics, new THREE.Vector3(0, 1, 0), [])
+    try {
+      player.grounded = true
+      player.step(1 / 60, { ...idleIntent, moveY: 1 }, 0, [])
+      const keyboardSpeed = player.velocity.length()
+      player.teleport(new THREE.Vector3(0, 1, 0))
+      player.grounded = true
+      player.step(1 / 60, { ...idleIntent, moveY: 1, touch: true }, 0, [])
+      const touchSpeed = player.velocity.length()
+      expect(touchSpeed).toBeGreaterThan(keyboardSpeed)
+      expect(touchSpeed).toBeLessThan(CONFIG.player.walkSpeed)
+    } finally { physics.dispose() }
+  })
+
   it('updates the actual camera projection and follow distance', async () => {
     await initPhysics()
     const physics = new Physics()

@@ -40,6 +40,13 @@ async function openGame(context, errors) {
   await page.waitForTimeout(450)
   return page
 }
+async function clickUi(page, selector) {
+  await page.evaluate(query => {
+    const element = document.querySelector(query)
+    if (!(element instanceof HTMLElement)) throw new Error(`Missing UI control: ${query}`)
+    element.click()
+  }, selector)
+}
 const state = page => page.evaluate(() => {
   const { game } = window.__game
   const p = game.position
@@ -57,7 +64,7 @@ try {
   const page = await openGame(desktop, errors)
   await page.screenshot({ path: `${out}/01-title.png` })
 
-  await page.click('[data-action="play"]')
+  await clickUi(page, '[data-action="play"]')
   await page.waitForSelector('[data-screen="hud"].is-active')
   const before = await state(page)
   await page.keyboard.down('KeyW')
@@ -76,32 +83,45 @@ try {
   await page.screenshot({ path: `${out}/02-gameplay.png` })
   console.log(`smoke: moved ${moved.toFixed(1)} m and jumped ${ (afterJump.pos.y - beforeJump).toFixed(1)} m`)
 
-  await page.keyboard.press('Escape')
+  await clickUi(page, '[data-screen="hud"] [data-action="pause"]')
   await page.waitForSelector('[data-screen="pause"].is-active')
-  await page.screenshot({ path: `${out}/03-pause.png` })
-  await page.click('[data-screen="pause"] [data-action="settings"]')
+  await clickUi(page, '[data-screen="pause"] [data-action="settings"]')
   await page.waitForSelector('[data-screen="settings"].is-active')
-  await page.click('[data-setting="quality"] [data-value="medium"]')
-  await page.screenshot({ path: `${out}/04-settings.png` })
-  await page.keyboard.press('Escape')
+  await clickUi(page, '[data-setting="quality"] [data-value="medium"]')
+  await clickUi(page, '[data-screen="settings"] [data-action="back"]')
   await page.waitForSelector('[data-screen="pause"].is-active')
-  if ((await state(page)).mode !== 'paused') throw new Error('leaving Settings with Escape resumed the session')
-  await page.click('[data-action="resume"]')
+  if ((await state(page)).mode !== 'paused') throw new Error('leaving Settings with Back resumed the session')
+  await clickUi(page, '[data-action="resume"]')
   await page.waitForSelector('[data-screen="hud"].is-active')
   if ((await state(page)).mode !== 'playing') throw new Error('resume did not return to the exploration')
-  await page.keyboard.press('Escape')
+  await clickUi(page, '[data-screen="hud"] [data-action="pause"]')
   await page.waitForSelector('[data-screen="pause"].is-active')
-  await page.click('[data-action="quit"]')
+  await clickUi(page, '[data-action="quit"]')
   await page.waitForSelector('[data-screen="title"].is-active')
   await desktop.close()
 
   const phone = await browser.newContext({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: 'vi-VN' })
   const phonePage = await openGame(phone, errors)
-  await phonePage.tap('[data-action="play"]')
+  await clickUi(phonePage, '[data-action="play"]')
   await phonePage.waitForSelector('[data-screen="hud"].is-active')
   const touchReady = await phonePage.evaluate(() => ({ touch: document.body.classList.contains('has-touch'), stick: getComputedStyle(document.querySelector('.touch-stick')).display, jump: getComputedStyle(document.querySelector('.touch-jump')).display }))
   if (!touchReady.touch || touchReady.stick === 'none' || touchReady.jump === 'none') throw new Error(`touch controls did not show: ${JSON.stringify(touchReady)}`)
-  await phonePage.screenshot({ path: `${out}/05-phone-hud.png` })
+  const touchMovement = await phonePage.evaluate(async () => {
+    const stick = document.querySelector('.touch-stick')
+    const rect = stick.getBoundingClientRect()
+    const x = rect.left + rect.width / 2, y = rect.top + rect.height / 2, id = 71
+    const before = window.__game.game.position
+    const event = (type, clientX, clientY) => new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: id, pointerType: 'touch', isPrimary: true, clientX, clientY })
+    stick.dispatchEvent(event('pointerdown', x, y))
+    window.dispatchEvent(event('pointermove', x + 24, y - 44))
+    await new Promise(resolve => setTimeout(resolve, 650))
+    const after = window.__game.game.position
+    const knobMoved = Boolean(stick.querySelector('i').style.transform)
+    window.dispatchEvent(event('pointerup', x + 24, y - 44))
+    return { distance: Math.hypot(after.x - before.x, after.z - before.z), knobMoved }
+  })
+  if (!touchMovement.knobMoved || touchMovement.distance < 0.5) throw new Error(`touch joystick did not drive movement: ${JSON.stringify(touchMovement)}`)
+  console.log(`smoke: touch joystick moved ${touchMovement.distance.toFixed(1)} m`)
   await phone.close()
 
   if (errors.length) throw new Error(`console/network errors:\n  ${errors.join('\n  ')}`)

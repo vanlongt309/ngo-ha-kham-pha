@@ -96,6 +96,7 @@ export class Game {
         sprint: this.input.held('sprint'),
         jumpPressed,
         jumpHeld: this.input.held('jump'),
+        touch: this.input.method === 'touch',
       }, this.cam.yaw, events)
       if (events.some(event => event.type === 'jump')) this.input.consume('jump')
     }

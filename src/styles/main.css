@@ -106,7 +106,8 @@ input[type=range]:focus-visible { box-shadow: 0 0 0 4px rgba(227,189,118,.2); }
 .touch { position: absolute; inset: 0; display: none; pointer-events: none; }
 .touch-stick { position: absolute; bottom: calc(58px + var(--safe-b)); left: calc(74px + var(--safe-l)); display: none; width: 118px; height: 118px; border: 1px solid rgba(243,233,210,.32); border-radius: 50%; background: rgba(20,38,34,.28); pointer-events: auto; touch-action: none; }
 .touch-stick.is-active { display: block; }
-.touch-stick i { position: absolute; top: 50%; left: 50%; width: 42px; height: 42px; margin: -21px 0 0 -21px; border: 1px solid rgba(243,233,210,.56); border-radius: 50%; background: rgba(227,189,118,.18); }
+.touch-stick.is-active { border-color: rgba(227,189,118,.72); background: rgba(20,38,34,.48); }
+.touch-stick i { position: absolute; top: 50%; left: 50%; width: 42px; height: 42px; margin: -21px 0 0 -21px; border: 1px solid rgba(243,233,210,.56); border-radius: 50%; background: rgba(227,189,118,.18); will-change: transform; }
 .touch-btn { position: absolute; right: calc(38px + var(--safe-r)); bottom: calc(72px + var(--safe-b)); display: grid; width: 76px; height: 76px; place-items: center; border: 1px solid rgba(227,189,118,.72); border-radius: 50%; background: rgba(20,38,34,.54); color: #f0d28f; pointer-events: auto; touch-action: none; font-size: 12px; font-weight: 700; }
 .touch-btn:active, .touch-btn.is-down { background: rgba(227,189,118,.32); transform: scale(.96); }
 body.has-touch .screen-hud.is-active .touch { display: block; }
