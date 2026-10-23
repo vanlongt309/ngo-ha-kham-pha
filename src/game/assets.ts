@@ -10,5 +10,6 @@ export const GAME_ASSETS = {
   },
   map: {
     shrine: asset('mountain-shrine-gate.glb', '/manus-storage/game/sha256/486b71e3c13e80789a46d1481f3738e6263f938c58059f7c8faccccfeb8d8bf7.glb'),
+    tree: asset('ancient-tree.glb', '/game-assets/ancient-tree.glb'),
   },
 } as const

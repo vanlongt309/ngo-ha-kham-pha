@@ -56,7 +56,7 @@ export class World {
   readonly coreSpots: THREE.Vector3[] = []
   readonly droneRoutes: DroneRoute[] = []
 
-  constructor(private readonly physics: Physics, shadowMapSize: number, shrineAsset: THREE.Object3D) {
+  constructor(private readonly physics: Physics, shadowMapSize: number, shrineAsset: THREE.Object3D, private readonly treeAsset: THREE.Object3D) {
     const random = rng(2036)
     this.scene.background = PALETTE.horizon.clone()
     this.scene.fog = new THREE.Fog(PALETTE.horizon, 42, 118)
@@ -176,24 +176,22 @@ export class World {
   private addTree(x: number, z: number, scale: number, random: () => number): void {
     const group = new THREE.Group()
     group.position.set(x, 0, z)
-    group.scale.setScalar(scale)
-    const trunkMat = flat('#63452f')
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.24, 1.65, 7), trunkMat)
-    trunk.position.y = 0.82
-    trunk.castShadow = true
-    group.add(trunk)
-    const colors = ['#365e48', '#456f4f', '#668157', '#8b754d']
-    const leafMat = flat(colors[Math.floor(random() * colors.length)])
-    for (let i = 0; i < 3; i += 1) {
-      const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9 - i * 0.08, 1), leafMat)
-      crown.position.set((random() - 0.5) * 0.45, 1.7 + i * 0.44, (random() - 0.5) * 0.36)
-      crown.scale.set(1.05, 0.78, 0.95)
-      crown.rotation.set(random() * 0.18, random() * Math.PI, random() * 0.18)
-      crown.castShadow = true
-      group.add(crown)
-    }
+    const tree = this.treeAsset.clone(true)
+    const sourceBox = new THREE.Box3().setFromObject(tree)
+    const sourceHeight = Math.max(sourceBox.getSize(new THREE.Vector3()).y, 0.01)
+    const targetHeight = 5.6 * scale
+    tree.scale.setScalar(targetHeight / sourceHeight)
+    tree.rotation.y = random() * Math.PI * 2
+    tree.updateWorldMatrix(true, true)
+    const scaledBox = new THREE.Box3().setFromObject(tree)
+    tree.position.y = -scaledBox.min.y
+    tree.traverse(obj => {
+      const mesh = obj as THREE.Mesh
+      if (mesh.isMesh) { mesh.castShadow = true; mesh.receiveShadow = true }
+    })
+    group.add(tree)
     this.scene.add(group)
-    this.physics.addStaticCylinder(new THREE.Vector3(x, 0.84 * scale, z), 0.2 * scale, 1.68 * scale)
+    this.physics.addStaticCylinder(new THREE.Vector3(x, 0.92 * scale, z), 0.38 * scale, 1.84 * scale)
   }
 
   private addRocks(random: () => number): void {

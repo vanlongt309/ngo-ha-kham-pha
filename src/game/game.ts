@@ -28,9 +28,10 @@ export class Game {
     private readonly input: Input,
     character: GLTF,
     shrine: GLTF,
+    tree: GLTF,
   ) {
     this.physics = new Physics(CONFIG.player.gravity)
-    this.world = new World(this.physics, renderer.shadowMapSize, shrine.scene)
+    this.world = new World(this.physics, renderer.shadowMapSize, shrine.scene, tree.scene)
     const idle = character.animations.find(clip => clip.name.toLowerCase().includes('idle')) ?? character.animations[0]
     const walk = character.animations.find(clip => clip.name.toLowerCase().includes('walk')) ?? character.animations[1]
     this.player = new Player(this.physics, this.world.spawn, this.world.movers, character.scene, idle, walk)

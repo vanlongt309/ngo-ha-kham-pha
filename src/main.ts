@@ -82,11 +82,12 @@ async function boot(): Promise<void> {
     const assets = new Assets()
     const offProgress = assets.onProgress(progress => ui.setBootProgress(0.08 + progress * 0.88))
     ui.setBootStatus(i18n.t('boot.models'))
-    let character: GLTF, shrine: GLTF
+    let character: GLTF, shrine: GLTF, tree: GLTF
     try {
-      ;[character, shrine] = await Promise.all([
+      ;[character, shrine, tree] = await Promise.all([
         assets.gltf(GAME_ASSETS.title.character),
         assets.gltf(GAME_ASSETS.map.shrine),
+        assets.gltf(GAME_ASSETS.map.tree),
       ])
     } finally {
       offProgress()
@@ -94,7 +95,7 @@ async function boot(): Promise<void> {
     ui.setBootProgress(1)
 
     const renderer = new Renderer(canvas, save.data.quality)
-    game = new GameClass(renderer, input, character, shrine)
+    game = new GameClass(renderer, input, character, shrine, tree)
     game.reducedMotion = save.data.reducedMotion
     if (import.meta.env.DEV) {
       const [{ registerGameTuning }, { tuning }] = await Promise.all([
