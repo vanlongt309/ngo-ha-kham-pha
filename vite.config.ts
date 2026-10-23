@@ -6,7 +6,7 @@ import { manusGameTuning } from './scripts/manus-tuning/vite.mjs'
 import { loadEnv, type Plugin } from 'vite'
 import { defineConfig } from 'vitest/config'
 
-declare const process: { cwd(): string }
+declare const process: { cwd(): string; env: Record<string, string | undefined> }
 
 type LocalAssets = Map<string, string>
 function storageMiddleware(localByStoragePath: LocalAssets) {
@@ -52,7 +52,7 @@ export default defineConfig(({ mode }) => {
   const port = Number(env.PORT ?? 3000)
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid PORT')
   return {
-    base: './',
+    base: process.env.VITE_GITHUB_PAGES === 'true' ? '/ngo-ha-kham-pha/' : './',
     plugins: [manusGameTuning(), localStoragePreviewBridge()],
     server: {
       host: env.HOST ?? '127.0.0.1', port, strictPort: true,
