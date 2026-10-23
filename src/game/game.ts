@@ -42,6 +42,7 @@ export class Game {
 
   get camera(): THREE.PerspectiveCamera { return this.cam.camera }
   get position(): THREE.Vector3 { return this.player.position }
+  get characterTarget(): THREE.Object3D { return this.player.root }
 
   start(): void {
     tuning.activate('run')

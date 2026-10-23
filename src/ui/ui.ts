@@ -3,12 +3,13 @@ import type { Input } from '../engine/input'
 import { type Quality, type SaveData, type SaveStore } from '../engine/save'
 import { GAME_ASSETS } from '../game/assets'
 
-export type Screen = 'boot' | 'title' | 'hud' | 'pause' | 'settings'
+export type Screen = 'boot' | 'title' | 'hud' | 'pause' | 'settings' | 'character'
 export type UiActions = {
   play(): void
   resume(): void
   restart(): void
   quit(): void
+  closeCharacter(): void
   settings(patch: Partial<SaveData>): void
 }
 
@@ -129,6 +130,7 @@ export class Ui {
       case 'resume': this.actions.resume(); break
       case 'restart': this.actions.restart(); break
       case 'quit': this.actions.quit(); break
+      case 'character-close': this.actions.closeCharacter(); break
       case 'settings': this.push('settings'); break
       case 'back': this.back(); break
       case 'pause': window.dispatchEvent(new CustomEvent('game:pause')); break
@@ -149,6 +151,9 @@ export class Ui {
     const typing = (event.target as HTMLElement).matches?.('input, textarea')
     if (event.code === 'Escape' && this.screen === 'settings') {
       event.preventDefault(); this.input.consume('pause'); this.back(); return
+    }
+    if (event.code === 'Escape' && this.screen === 'character') {
+      event.preventDefault(); this.input.consume('pause'); this.actions.closeCharacter(); return
     }
     if (event.code === 'Backspace' && !typing && this.screen !== 'title') { event.preventDefault(); this.back(); return }
     if (event.code === 'ArrowDown' || event.code === 'ArrowUp') {
@@ -199,6 +204,16 @@ export class Ui {
 <section class="screen screen-modal" data-screen="settings"><div class="modal-card settings-card"><p class="title-kicker" data-i18n="settings.controls"></p><h2 class="modal-title" data-i18n="settings.title"></h2>
   <div class="settings-grid"><fieldset><legend data-i18n="settings.controls"></legend>${range('sensitivity','settings.sensitivity',0.2,3,0.1)}${toggle('invertY','settings.invertY')}</fieldset>
   <fieldset><legend data-i18n="settings.display"></legend><div class="setting-row"><span data-i18n="settings.quality"></span><div class="seg" data-setting="quality"><button data-nav data-value="low" data-i18n="settings.quality.low"></button><button data-nav data-value="medium" data-i18n="settings.quality.medium"></button><button data-nav data-value="high" data-i18n="settings.quality.high"></button></div></div>${toggle('reducedMotion','settings.reducedMotion')}</fieldset></div>
-  <nav class="menu menu-row"><button data-nav class="btn btn-quiet" data-action="back"><span data-i18n="menu.back"></span></button></nav></div></section>`
+  <nav class="menu menu-row"><button data-nav class="btn btn-quiet" data-action="back"><span data-i18n="menu.back"></span></button></nav></div></section>
+<section class="screen screen-modal character-screen" data-screen="character"><div class="modal-card character-card"><p class="title-kicker">HỒ SƠ NHÂN VẬT</p><h2 class="modal-title">LEO</h2><p class="character-subtitle">Nhà thám hiểm · Sơn Môn Vân Sơn</p>
+  <div class="character-profile"><div><span>Tuổi</span><b>20</b></div><div><span>Chiều cao</span><b>1,78 m</b></div><div><span>Thể trạng</span><b>Gọn & khỏe</b></div></div>
+  <h3 class="equipment-heading">TRANG BỊ ĐANG MANG</h3><div class="equipment-list">
+    <div class="equipment-item"><i>01</i><div><b>Áo khoác dã ngoại</b><span>Áo khoác xanh navy / olive, có túi tiện dụng</span></div></div>
+    <div class="equipment-item"><i>02</i><div><b>Áo henley</b><span>Áo henley màu be mặc bên trong</span></div></div>
+    <div class="equipment-item"><i>03</i><div><b>Quần cargo</b><span>Quần cargo olive với túi bên hông</span></div></div>
+    <div class="equipment-item"><i>04</i><div><b>Boots leo núi</b><span>Boots da nâu, đế bám địa hình</span></div></div>
+    <div class="equipment-item"><i>05</i><div><b>Ba lô thám hiểm</b><span>Ba lô màu nâu, đựng vật dụng hành trình</span></div></div>
+    <div class="equipment-item"><i>06</i><div><b>Đồng hồ dã ngoại</b><span>Đồng hồ đeo tay bên trái</span></div></div>
+  </div><nav class="menu menu-row"><button data-nav class="btn btn-primary" data-action="character-close"><span>QUAY LẠI KHÁM PHÁ</span></button></nav></div></section>`
   }
 }

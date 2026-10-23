@@ -1,4 +1,5 @@
 import './styles/main.css'
+import * as THREE from 'three'
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { Assets } from './engine/assets'
 import { I18n } from './engine/i18n'
@@ -21,6 +22,7 @@ async function boot(): Promise<void> {
   let game: Game | undefined
   let loop: GameLoop | undefined
   let lockLostAt = 0
+  const raycaster = new THREE.Raycaster()
 
   const applySettings = (data: SaveData) => {
     input.sensitivity = data.sensitivity
@@ -52,6 +54,7 @@ async function boot(): Promise<void> {
     play: start,
     resume,
     restart: start,
+    closeCharacter: resume,
     quit: () => {
       game?.toTitle()
       ui.show('title')
@@ -128,7 +131,20 @@ async function boot(): Promise<void> {
     })
     document.addEventListener('visibilitychange', () => { if (document.hidden) pause() })
     window.addEventListener('game:pause', pause)
-    canvas.addEventListener('click', () => { if (g.mode === 'playing') input.lockPointer() })
+    canvas.addEventListener('click', event => {
+      if (g.mode !== 'playing' || ui.screen !== 'hud') return
+      const rect = canvas.getBoundingClientRect()
+      const locked = document.pointerLockElement === canvas
+      const ndc = locked
+        ? new THREE.Vector2(0, 0)
+        : new THREE.Vector2(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1)
+      raycaster.setFromCamera(ndc, g.camera)
+      if (raycaster.intersectObject(g.characterTarget, true).length) {
+        g.pause()
+        ui.show('character')
+        input.unlockPointer()
+      } else input.lockPointer()
+    })
     new TouchControls(document.getElementById('ui')!, input, () => g.mode === 'playing')
     window.setTimeout(() => ui.show('title'), 160)
     ;(window as unknown as { __game: unknown }).__game = { game: g, ui, input, save }
