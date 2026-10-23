@@ -3,6 +3,8 @@ import type { Input } from '../engine/input'
 import { type Quality, type SaveData, type SaveStore } from '../engine/save'
 import { GAME_ASSETS } from '../game/assets'
 
+const equipmentAsset = (file: string) => `${import.meta.env.BASE_URL}equipment/${file}`
+
 export type Screen = 'boot' | 'title' | 'hud' | 'pause' | 'settings' | 'character'
 export type UiActions = {
   play(): void
@@ -208,12 +210,12 @@ export class Ui {
 <section class="screen screen-modal character-screen" data-screen="character"><div class="modal-card character-card"><p class="title-kicker">HỒ SƠ NHÂN VẬT</p><h2 class="modal-title">LEO</h2><p class="character-subtitle">Nhà thám hiểm · Sơn Môn Vân Sơn</p>
   <div class="character-profile"><div><span>Tuổi</span><b>20</b></div><div><span>Chiều cao</span><b>1,78 m</b></div><div><span>Thể trạng</span><b>Gọn & khỏe</b></div></div>
   <h3 class="equipment-heading">TRANG BỊ ĐANG MANG</h3><div class="equipment-list">
-    <div class="equipment-item"><i>01</i><div><b>Áo khoác dã ngoại</b><span>Áo khoác xanh navy / olive, có túi tiện dụng</span></div></div>
-    <div class="equipment-item"><i>02</i><div><b>Áo henley</b><span>Áo henley màu be mặc bên trong</span></div></div>
-    <div class="equipment-item"><i>03</i><div><b>Quần cargo</b><span>Quần cargo olive với túi bên hông</span></div></div>
-    <div class="equipment-item"><i>04</i><div><b>Boots leo núi</b><span>Boots da nâu, đế bám địa hình</span></div></div>
-    <div class="equipment-item"><i>05</i><div><b>Ba lô thám hiểm</b><span>Ba lô màu nâu, đựng vật dụng hành trình</span></div></div>
-    <div class="equipment-item"><i>06</i><div><b>Đồng hồ dã ngoại</b><span>Đồng hồ đeo tay bên trái</span></div></div>
+    <div class="equipment-item"><div class="equipment-image"><img src="${equipmentAsset('jacket.png')}" alt="Áo khoác dã ngoại"></div><div class="equipment-copy"><i>01</i><b>Áo khoác dã ngoại</b><span>Áo khoác xanh navy / olive, có túi tiện dụng</span></div></div>
+    <div class="equipment-item"><div class="equipment-image"><img src="${equipmentAsset('henley.png')}" alt="Áo henley"></div><div class="equipment-copy"><i>02</i><b>Áo henley</b><span>Áo henley màu be mặc bên trong</span></div></div>
+    <div class="equipment-item"><div class="equipment-image"><img src="${equipmentAsset('cargo-pants.png')}" alt="Quần cargo"></div><div class="equipment-copy"><i>03</i><b>Quần cargo</b><span>Quần cargo olive với túi bên hông</span></div></div>
+    <div class="equipment-item"><div class="equipment-image"><img src="${equipmentAsset('boots.png')}" alt="Boots leo núi"></div><div class="equipment-copy"><i>04</i><b>Boots leo núi</b><span>Boots da nâu, đế bám địa hình</span></div></div>
+    <div class="equipment-item"><div class="equipment-image"><img src="${equipmentAsset('backpack.png')}" alt="Ba lô thám hiểm"></div><div class="equipment-copy"><i>05</i><b>Ba lô thám hiểm</b><span>Ba lô màu nâu, đựng vật dụng hành trình</span></div></div>
+    <div class="equipment-item"><div class="equipment-image"><img src="${equipmentAsset('watch.png')}" alt="Đồng hồ dã ngoại"></div><div class="equipment-copy"><i>06</i><b>Đồng hồ dã ngoại</b><span>Đồng hồ đeo tay bên trái</span></div></div>
   </div><nav class="menu menu-row"><button data-nav class="btn btn-primary" data-action="character-close"><span>QUAY LẠI KHÁM PHÁ</span></button></nav></div></section>`
   }
 }
