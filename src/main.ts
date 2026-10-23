@@ -34,7 +34,6 @@ async function boot(): Promise<void> {
     game.start()
     activeUi?.show('hud')
     loop?.resetAccumulator()
-    input.lockPointer()
   }
   const pause = () => {
     if (game?.mode !== 'playing') return
@@ -131,19 +130,31 @@ async function boot(): Promise<void> {
     })
     document.addEventListener('visibilitychange', () => { if (document.hidden) pause() })
     window.addEventListener('game:pause', pause)
-    canvas.addEventListener('click', event => {
-      if (g.mode !== 'playing' || ui.screen !== 'hud') return
+    const inspectCharacterAt = (clientX: number, clientY: number): boolean => {
+      if (g.mode !== 'playing' || ui.screen !== 'hud') return false
       const rect = canvas.getBoundingClientRect()
       const locked = document.pointerLockElement === canvas
       const ndc = locked
         ? new THREE.Vector2(0, 0)
-        : new THREE.Vector2(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1)
+        : new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1)
       raycaster.setFromCamera(ndc, g.camera)
-      if (raycaster.intersectObject(g.characterTarget, true).length) {
-        g.pause()
-        ui.show('character')
-        input.unlockPointer()
-      } else input.lockPointer()
+      if (!raycaster.intersectObject(g.characterTarget, true).length) return false
+      g.pause()
+      ui.show('character')
+      input.unlockPointer()
+      return true
+    }
+    // Capture before TouchControls so a tap on Leo cannot become joystick movement or camera drag.
+    window.addEventListener('pointerdown', event => {
+      if (event.target !== canvas || (event.pointerType === 'mouse' && event.button !== 0)) return
+      if (inspectCharacterAt(event.clientX, event.clientY)) {
+        event.preventDefault()
+        event.stopImmediatePropagation()
+      }
+    }, { capture: true })
+    canvas.addEventListener('click', event => {
+      if (g.mode !== 'playing' || ui.screen !== 'hud') return
+      if (!inspectCharacterAt(event.clientX, event.clientY)) input.lockPointer()
     })
     new TouchControls(document.getElementById('ui')!, input, () => g.mode === 'playing')
     window.setTimeout(() => ui.show('title'), 160)
