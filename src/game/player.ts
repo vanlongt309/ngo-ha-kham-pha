@@ -13,7 +13,7 @@ const MODEL_SCALE = 1.82
 // The Tripo GLB faces local +X; rotate it so its forward matches the game's -Z direction.
 const MODEL_FORWARD_OFFSET = Math.PI / 2
 
-/** Third-person free-movement controller backed by Rapier and the approved rigged Wukong GLB. */
+/** Third-person free-movement controller backed by Rapier and the approved rigged Leo GLB. */
 export class Player {
   readonly root = new THREE.Group()
   readonly body: RAPIER.RigidBody

@@ -5,8 +5,7 @@ const asset = (file: string, storagePath: string) =>
 
 export const GAME_ASSETS = {
   title: {
-    idle: asset('wukong-idle.glb', '/manus-storage/game/sha256/96f94dfcd2a96065032be45bd9dc1e2bf23d92aa9fbf9f678e5beeb523a44729.glb'),
-    walk: asset('wukong-walk.glb', '/manus-storage/game/sha256/60451b846d5fb45486eba57ed5bf41f4c8d1eeb8a9ef2acbd50f8d6c2f075438.glb'),
+    character: asset('leo.glb', '/game-assets/leo.glb'),
     emblem: asset('favicon.png', '/manus-storage/game/sha256/4539cdce0c06b948e70947314824000e844940517ceb03e3d6512aeb387ea3d0.png'),
   },
   map: {

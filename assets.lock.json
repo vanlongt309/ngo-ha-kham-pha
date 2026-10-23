@@ -23,20 +23,6 @@
       "assetType": "model",
       "groupId": "map-landmarks"
     },
-    "assets/models/wukong-idle.glb": {
-      "path": "/manus-storage/game/sha256/96f94dfcd2a96065032be45bd9dc1e2bf23d92aa9fbf9f678e5beeb523a44729.glb",
-      "sha256": "sha256:96f94dfcd2a96065032be45bd9dc1e2bf23d92aa9fbf9f678e5beeb523a44729",
-      "size": 8126696,
-      "assetType": "model",
-      "groupId": "characters"
-    },
-    "assets/models/wukong-walk.glb": {
-      "path": "/manus-storage/game/sha256/60451b846d5fb45486eba57ed5bf41f4c8d1eeb8a9ef2acbd50f8d6c2f075438.glb",
-      "sha256": "sha256:60451b846d5fb45486eba57ed5bf41f4c8d1eeb8a9ef2acbd50f8d6c2f075438",
-      "size": 7984392,
-      "assetType": "model",
-      "groupId": "characters"
-    },
     "assets/share/favicon.png": {
       "path": "/manus-storage/game/sha256/4539cdce0c06b948e70947314824000e844940517ceb03e3d6512aeb387ea3d0.png",
       "sha256": "sha256:4539cdce0c06b948e70947314824000e844940517ceb03e3d6512aeb387ea3d0",

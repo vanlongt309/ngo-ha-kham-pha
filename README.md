@@ -1,6 +1,6 @@
 # Ngộ Không Khám Phá
 
-Game 3D khám phá một người chơi bằng Three.js. Điều khiển Ngộ Không tự do dạo bước trong map sơn môn Vân Sơn.
+Game 3D khám phá một người chơi bằng Three.js. Điều khiển Leo tự do dạo bước trong map sơn môn Vân Sơn.
 
 **Chơi game:** <https://vanlongt309.github.io/ngo-ha-kham-pha/>
 
@@ -22,7 +22,7 @@ VITE_GITHUB_PAGES=true pnpm manus:build-source
 pnpm exec vite preview --host 0.0.0.0
 ```
 
-Build tạo game tĩnh trong `dist/`. Các model GLB và biểu tượng cần thiết được đóng gói trong `public/game-assets/`, nên bản GitHub Pages không phụ thuộc Manus Storage. GitHub Actions tự chạy kiểm tra, build và deploy khi có commit mới vào `main`.
+Build tạo game tĩnh trong `dist/`. Model nhân vật Leo có animation `idle`/`walk`, shrine và biểu tượng cần thiết được đóng gói trong `public/game-assets/`, nên bản GitHub Pages không phụ thuộc Manus Storage cho nhân vật. GitHub Actions tự chạy kiểm tra, build và deploy khi có commit mới vào `main`.
 
 ## Công nghệ và giấy phép
 

@@ -26,13 +26,14 @@ export class Game {
   constructor(
     private readonly renderer: Renderer,
     private readonly input: Input,
-    idle: GLTF,
-    walk: GLTF,
+    character: GLTF,
     shrine: GLTF,
   ) {
     this.physics = new Physics(CONFIG.player.gravity)
     this.world = new World(this.physics, renderer.shadowMapSize, shrine.scene)
-    this.player = new Player(this.physics, this.world.spawn, this.world.movers, walk.scene, idle.animations[0], walk.animations[0])
+    const idle = character.animations.find(clip => clip.name.toLowerCase().includes('idle')) ?? character.animations[0]
+    const walk = character.animations.find(clip => clip.name.toLowerCase().includes('walk')) ?? character.animations[1]
+    this.player = new Player(this.physics, this.world.spawn, this.world.movers, character.scene, idle, walk)
     this.cam = new FollowCamera(this.physics, this.player.collider)
     this.world.scene.add(this.player.root, this.player.shadowMesh)
     this.cam.reset(this.world.spawn, 0)
