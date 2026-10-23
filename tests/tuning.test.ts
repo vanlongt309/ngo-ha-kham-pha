@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { CONFIG, DEFAULT_CONFIG } from '../src/game/config'
 import { tuning } from '../src/game/tuning'
 import { initPhysics, Physics } from '../src/engine/physics'
-import { Player, type PlayerIntent } from '../src/game/player'
+import { Player, locomotionBlend, walkAnimationRate, type PlayerIntent } from '../src/game/player'
 import { FollowCamera } from '../src/game/camera'
 
 const defaults = Object.fromEntries(tuning.controls.map(control => [control.id, control.default]))
@@ -32,7 +32,7 @@ describe('Three.js exploration tuning', () => {
     tuning.apply({ 'player.walkSpeed': 6, 'player.sprintSpeed': 9 })
     expect(CONFIG.player.walkSpeed).toBe(6)
     expect(CONFIG.player.sprintSpeed).toBe(9)
-    expect(DEFAULT_CONFIG.player.walkSpeed).toBe(5.2)
+    expect(DEFAULT_CONFIG.player.walkSpeed).toBe(2.6)
   })
 
   it('uses speed tuning in movement and activates jump tuning only at the jump boundary', async () => {
@@ -45,7 +45,7 @@ describe('Three.js exploration tuning', () => {
       const originalSpeed = player.velocity.x
       player.teleport(new THREE.Vector3(0, 1, 0))
       player.grounded = true
-      tuning.apply({ 'player.walkSpeed': 7 })
+      tuning.apply({ 'player.walkSpeed': 5 })
       player.step(1 / 60, { ...idleIntent, moveX: 1 }, 0, [])
       expect(player.velocity.x).toBeGreaterThan(originalSpeed)
 
@@ -77,6 +77,49 @@ describe('Three.js exploration tuning', () => {
     } finally { physics.dispose() }
   })
 
+  it('blends gait continuously and scales the walk cycle with real movement speed', () => {
+    const walkSpeed = CONFIG.player.walkSpeed
+    expect(locomotionBlend(0, true, walkSpeed)).toBe(0)
+    expect(locomotionBlend(0.55, true, walkSpeed)).toBeGreaterThan(0)
+    expect(locomotionBlend(0.55, true, walkSpeed)).toBeLessThan(1)
+    expect(locomotionBlend(walkSpeed, true, walkSpeed)).toBe(1)
+    expect(locomotionBlend(walkSpeed, false, walkSpeed)).toBe(0)
+    expect(walkAnimationRate(0, walkSpeed)).toBe(0)
+    expect(walkAnimationRate(walkSpeed, walkSpeed)).toBeGreaterThan(1.4)
+    expect(walkAnimationRate(CONFIG.player.sprintSpeed, walkSpeed)).toBeGreaterThan(walkAnimationRate(walkSpeed, walkSpeed))
+    expect(walkAnimationRate(CONFIG.player.sprintSpeed, walkSpeed)).toBeLessThanOrEqual(2.5)
+  })
+
+  it('eases acceleration and braking, and turns with momentum during a direction change', async () => {
+    await initPhysics()
+    const physics = new Physics(CONFIG.player.gravity)
+    const player = new Player(physics, new THREE.Vector3(0, 1, 0), [])
+    try {
+      for (let i = 0; i < 24; i += 1) {
+        player.grounded = true
+        player.step(1 / 60, { ...idleIntent, moveY: 1 }, 0, [])
+      }
+      const cruising = Math.hypot(player.velocity.x, player.velocity.z)
+      expect(cruising).toBeGreaterThan(CONFIG.player.walkSpeed * 0.55)
+      expect(cruising).toBeLessThan(CONFIG.player.walkSpeed)
+
+      player.grounded = true
+      player.step(1 / 60, { ...idleIntent, moveX: 1 }, 0, [])
+      expect(Math.abs(player.facing)).toBeLessThan(0.12)
+
+      player.grounded = true
+      player.step(1 / 60, idleIntent, 0, [])
+      const immediatelyAfterRelease = Math.hypot(player.velocity.x, player.velocity.z)
+      expect(immediatelyAfterRelease).toBeGreaterThan(0)
+      expect(immediatelyAfterRelease).toBeLessThan(cruising)
+      for (let i = 0; i < 60; i += 1) {
+        player.grounded = true
+        player.step(1 / 60, idleIntent, 0, [])
+      }
+      expect(Math.hypot(player.velocity.x, player.velocity.z)).toBeLessThan(0.2)
+    } finally { physics.dispose() }
+  })
+
   it('keeps forward and strafe on separate axes and faces the direction of travel', async () => {
     await initPhysics()
     const physics = new Physics(CONFIG.player.gravity)
@@ -97,7 +140,7 @@ describe('Three.js exploration tuning', () => {
       player.step(1 / 60, { ...idleIntent, moveX: 1 }, 0, [])
       expect(player.velocity.x).toBeGreaterThan(0)
       expect(player.velocity.z).toBeCloseTo(0, 5)
-      for (let i = 0; i < 60; i += 1) player.step(1 / 60, { ...idleIntent, moveX: 1 }, 0, [])
+      for (let i = 0; i < 75; i += 1) player.step(1 / 60, { ...idleIntent, moveX: 1 }, 0, [])
       player.animate(0, null)
       const strafe = new THREE.Vector3(1, 0, 0).applyEuler(model.rotation)
       expect(strafe.x).toBeCloseTo(1, 5)

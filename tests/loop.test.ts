@@ -21,6 +21,17 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals() })
 
 describe('GameLoop scheduling', () => {
+  it('refreshes device input before every fixed-step catch-up batch', () => {
+    let movement = 1
+    const observed: number[] = []
+    const loop = new GameLoop({ beforeFrame: () => { movement = 0 }, step: () => observed.push(movement), render: vi.fn() })
+    loop.start()
+    frame(0.25)
+    expect(observed).toHaveLength(15)
+    expect(observed.every(value => value === 0)).toBe(true)
+    loop.stop()
+  })
+
   for (const phase of ['step', 'render'] as const) {
     it(`continues after one ${phase} exception without swallowing the error or accumulating failed time`, () => {
       const error = new Error('frame failure')

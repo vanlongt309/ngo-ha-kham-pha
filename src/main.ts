@@ -105,9 +105,9 @@ async function boot(): Promise<void> {
     }
     const g = game
     loop = new GameLoop({
+      beforeFrame: () => input.update(),
       step: dt => g.step(dt),
       render: (alpha, frameSeconds) => {
-        input.update()
         if (input.consume('pause') && performance.now() - lockLostAt > 300) {
           if (g.mode === 'playing') pause()
           else if (g.mode === 'paused' && ui.screen === 'pause') resume()

@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { CONFIG } from '../src/game/config'
 import { ISLANDS, planStones, rng } from '../src/game/world'
 
-// Jump reach from config: apex height and flat walking distance.
+// Jump reach from config: apex height and flat sprinting distance.
 const apex = CONFIG.player.jumpSpeed ** 2 / (2 * -CONFIG.player.gravity)
 const airtime = (2 * CONFIG.player.jumpSpeed) / -CONFIG.player.gravity
-const reach = CONFIG.player.walkSpeed * airtime
+const reach = CONFIG.player.sprintSpeed * airtime
 
 describe('level', () => {
   it('generates stepping stones that are always jumpable', () => {

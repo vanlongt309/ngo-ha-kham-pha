@@ -27,7 +27,7 @@ export class Player {
   private readonly mixer?: THREE.AnimationMixer
   private readonly idleAction?: THREE.AnimationAction
   private readonly walkAction?: THREE.AnimationAction
-  private currentAction?: THREE.AnimationAction
+  private gaitBlend = 0
   private coyote = 0
   private jumpBuffer = 0
   private jumping = false
@@ -65,7 +65,8 @@ export class Player {
       this.idleAction = this.mixer.clipAction(idleClip).setLoop(THREE.LoopRepeat, Infinity)
       this.walkAction = this.mixer.clipAction(walkClip).setLoop(THREE.LoopRepeat, Infinity)
       this.idleAction.play()
-      this.currentAction = this.idleAction
+      this.walkAction.play()
+      this.walkAction.setEffectiveWeight(0)
     }
     physics.bind(this.body, this.root)
     this.shadowMesh = new THREE.Mesh(
@@ -94,7 +95,7 @@ export class Player {
     const control = this.grounded ? 1 : P.airControl
     const target = wish.clone().multiplyScalar(speed)
     const horizontal = new THREE.Vector3(this.velocity.x, 0, this.velocity.z)
-    const response = (P.acceleration / (intent.touch ? 3 : 6)) * control
+    const response = (P.acceleration / (intent.touch ? 4.5 : 7)) * control
     horizontal.lerp(target, 1 - Math.exp(-response * dt))
     this.velocity.x = horizontal.x
     this.velocity.z = horizontal.z
@@ -113,7 +114,11 @@ export class Player {
     const gravity = rising && this.jumping && !intent.jumpHeld ? P.lowJumpGravity : P.gravity
     this.velocity.y = Math.max(P.maxFall, this.velocity.y + gravity * dt)
 
-    if (wishLen > 0.1) this.facing = dampAngle(this.facing, Math.atan2(-wish.x, -wish.z), P.turnSpeed, dt)
+    const travelDirection = new THREE.Vector3(this.velocity.x, 0, this.velocity.z)
+    const facingDirection = travelDirection.length() > 0.22 ? travelDirection : wish
+    if (facingDirection.lengthSq() > 0.04) {
+      this.facing = dampAngle(this.facing, Math.atan2(-facingDirection.x, -facingDirection.z), P.turnSpeed, dt)
+    }
 
     const desired = this.velocity.clone().multiplyScalar(dt)
     if (this.platform) desired.add(this.platform.delta)
@@ -152,13 +157,12 @@ export class Player {
   animate(frameSeconds: number, ground: number | null): void {
     const speed = Math.hypot(this.velocity.x, this.velocity.z)
     this.character.rotation.y = this.facing + MODEL_FORWARD_OFFSET
-    const next = speed > 0.55 && this.grounded ? this.walkAction : this.idleAction
-    if (next && next !== this.currentAction) {
-      next.reset().play()
-      if (this.currentAction) next.crossFadeFrom(this.currentAction, 0.2, false)
-      this.currentAction = next
-    }
-    if (this.walkAction) this.walkAction.setEffectiveTimeScale(THREE.MathUtils.clamp(speed / P.walkSpeed, 0.72, 1.55))
+    const targetBlend = locomotionBlend(speed, this.grounded, P.walkSpeed)
+    const blendRate = targetBlend > this.gaitBlend ? 10 : 8
+    this.gaitBlend += (targetBlend - this.gaitBlend) * (1 - Math.exp(-blendRate * frameSeconds))
+    this.idleAction?.setEffectiveWeight(1 - this.gaitBlend)
+    this.walkAction?.setEffectiveWeight(this.gaitBlend)
+    this.walkAction?.setEffectiveTimeScale(walkAnimationRate(speed, P.walkSpeed))
     this.mixer?.update(frameSeconds)
 
     if (ground === null) {
@@ -181,6 +185,21 @@ export class Player {
       return Math.abs(feet - top) < 0.2 && Math.abs(pos.x - c.x) < m.half.x + P.radius * 0.6 && Math.abs(pos.z - c.z) < m.half.z + P.radius * 0.6
     })
   }
+}
+
+/** Blend gait in gradually so small stick movements do not switch straight from idle to a full walk. */
+export function locomotionBlend(speed: number, grounded: boolean, walkSpeed: number): number {
+  if (!grounded) return 0
+  const start = 0.12
+  const full = Math.max(start + 0.01, walkSpeed * 0.75)
+  const t = THREE.MathUtils.clamp((speed - start) / (full - start), 0, 1)
+  return t * t * (3 - 2 * t)
+}
+
+/** Match the in-place clip cadence to travel speed; zero speed holds the current planted pose. */
+export function walkAnimationRate(speed: number, walkSpeed: number): number {
+  if (speed < 0.08) return 0
+  return THREE.MathUtils.clamp(speed / Math.max(0.1, walkSpeed * 0.62), 0.55, 2.5)
 }
 
 function dampAngle(from: number, to: number, lambda: number, dt: number): number {
