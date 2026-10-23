@@ -77,6 +77,34 @@ describe('Three.js exploration tuning', () => {
     } finally { physics.dispose() }
   })
 
+  it('keeps forward and strafe on separate axes and faces the direction of travel', async () => {
+    await initPhysics()
+    const physics = new Physics(CONFIG.player.gravity)
+    const model = new THREE.Group()
+    const player = new Player(physics, new THREE.Vector3(0, 1, 0), [], model)
+    try {
+      player.grounded = true
+      player.step(1 / 60, { ...idleIntent, moveY: 1 }, 0, [])
+      expect(player.velocity.x).toBeCloseTo(0, 5)
+      expect(player.velocity.z).toBeLessThan(0)
+      player.animate(0, null)
+      const forward = new THREE.Vector3(1, 0, 0).applyEuler(model.rotation)
+      expect(forward.x).toBeCloseTo(0, 5)
+      expect(forward.z).toBeCloseTo(-1, 5)
+
+      player.teleport(new THREE.Vector3(0, 1, 0))
+      player.grounded = true
+      player.step(1 / 60, { ...idleIntent, moveX: 1 }, 0, [])
+      expect(player.velocity.x).toBeGreaterThan(0)
+      expect(player.velocity.z).toBeCloseTo(0, 5)
+      for (let i = 0; i < 60; i += 1) player.step(1 / 60, { ...idleIntent, moveX: 1 }, 0, [])
+      player.animate(0, null)
+      const strafe = new THREE.Vector3(1, 0, 0).applyEuler(model.rotation)
+      expect(strafe.x).toBeCloseTo(1, 5)
+      expect(strafe.z).toBeCloseTo(0, 4)
+    } finally { physics.dispose() }
+  })
+
   it('updates the actual camera projection and follow distance', async () => {
     await initPhysics()
     const physics = new Physics()

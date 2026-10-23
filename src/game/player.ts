@@ -10,7 +10,8 @@ export type PlayerEvent = { type: 'jump' } | { type: 'land'; impact: number }
 const P = CONFIG.player
 const UP = new THREE.Vector3(0, 1, 0)
 const MODEL_SCALE = 1.82
-const MODEL_FORWARD_OFFSET = Math.PI
+// The Tripo GLB faces local +X; rotate it so its forward matches the game's -Z direction.
+const MODEL_FORWARD_OFFSET = Math.PI / 2
 
 /** Third-person free-movement controller backed by Rapier and the approved rigged Wukong GLB. */
 export class Player {
